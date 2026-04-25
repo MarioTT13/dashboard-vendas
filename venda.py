@@ -2,58 +2,80 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Configuração da página
-st.set_page_config(page_title="Painel de Lucro Real", layout="wide")
+st.set_page_config(page_title="Dashboard Universal", layout="wide")
 
-st.title("📊 Painel de Inteligência de Negócio")
-st.markdown("---")
+st.title("📊 Painel de Inteligência Adaptável")
+st.info("Este painel se ajusta automaticamente às colunas da sua planilha.")
 
-# Menu lateral para upload ou status
-st.sidebar.header("Configurações")
-uploaded_file = st.sidebar.file_uploader("Suba sua planilha de vendas", type=["xlsx"])
+# --- BARRA LATERAL ---
+st.sidebar.header("📥 Entrada de Dados")
+uploaded_file = st.sidebar.file_uploader("Suba qualquer planilha de vendas", type=["xlsx", "csv"])
 
-# Lógica para carregar os dados
-df = None
-
-if uploaded_file is not None:
-    df = pd.read_excel(uploaded_file)
-else:
-    # Tenta carregar automaticamente se o arquivo estiver na pasta
+def carregar_dados():
+    if uploaded_file is not None:
+        return pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
     try:
-        df = pd.read_excel("vendas.xlsx")
-        st.sidebar.success("Planilha 'vendas.xlsx' carregada automaticamente!")
+        return pd.read_excel("vendas.xlsx")
     except:
-        st.sidebar.info("Aguardando upload da planilha ou arquivo 'vendas.xlsx' na pasta.")
+        return None
 
-# Se os dados foram carregados, mostra o dashboard
+df = carregar_dados()
+
 if df is not None:
-    # Cálculos das métricas
-    total_vendas = df['Valor'].sum()
-    quantidade = len(df)
-    # Cálculo de lucro fictício (ex: 30%) - você pode ajustar isso depois
-    lucro_estimado = total_vendas * 0.30 
+    # --- LÓGICA DE IDENTIFICAÇÃO AUTOMÁTICA ---
+    cols = df.columns.tolist()
+    
+    # Tenta achar a coluna de VALOR (procurando por nomes comuns)
+    col_valor = next((c for c in cols if any(kw in c.lower() for kw in ['valor', 'preço', 'preco', 'total', 'faturamento', 'venda'])), cols[-1])
+    
+    # Tenta achar a coluna de CATEGORIA/NOME
+    col_cat = next((c for c in cols if any(kw in c.lower() for kw in ['cat', 'nome', 'produto', 'item', 'descrição', 'desc'])), cols[0])
 
-    # Exibição das métricas em colunas
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Faturamento Total", f"R$ {total_vendas:,.2f}")
-    col2.metric("Nº de Vendas", quantidade)
-    col3.metric("Lucro Estimado (30%)", f"R$ {lucro_estimado:,.2f}")
+    # Tenta achar a coluna de DATA
+    col_data = next((c for c in cols if any(kw in c.lower() for kw in ['data', 'dia', 'mês', 'mes', 'emissão'])), None)
 
+    if col_data:
+        df[col_data] = pd.to_datetime(df[col_data])
+
+    # --- FILTROS DINÂMICOS NA LATERAL ---
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🎯 Filtros")
+    
+    # Filtro de Categoria (pega os valores únicos da coluna identificada)
+    lista_categorias = df[col_cat].unique().tolist()
+    categorias_selecionadas = st.sidebar.multiselect("Filtrar por " + col_cat, lista_categorias, default=lista_categorias)
+
+    # Aplicando o filtro
+    df_filtrado = df[df[col_cat].isin(categorias_selecionadas)]
+
+    # --- EXIBIÇÃO DE MÉTRICAS ---
+    total = df_filtrado[col_valor].sum()
+    qtd = len(df_filtrado)
+    
+    c1, c2 = st.columns(2)
+    c1.metric(f"Total em {col_valor}", f"R$ {total:,.2f}")
+    c2.metric("Quantidade de Registros", qtd)
+
+    # --- GRÁFICOS DINÂMICOS ---
     st.markdown("---")
+    col_esq, col_dir = st.columns(2)
 
-    # Gráfico de Barras
-    st.subheader("📈 Vendas por Categoria")
-    vendas_por_cat = df.groupby('Categoria')['Valor'].sum().reset_index()
-    fig = px.bar(vendas_por_cat, x='Categoria', y='Valor', 
-                 color='Categoria', 
-                 text_auto='.2s',
-                 title="Distribuição de Receita")
-    st.plotly_chart(fig, use_container_width=True)
+    with col_esq:
+        st.subheader("Divisão por " + col_cat)
+        fig_rosca = px.pie(df_filtrado, values=col_valor, names=col_cat, hole=0.4)
+        st.plotly_chart(fig_rosca, use_container_width=True)
 
-    # Tabela de Dados
-    with st.expander("Ver dados brutos"):
-        st.write(df)
+    with col_dir:
+        st.subheader("Evolução Financeira")
+        if col_data:
+            df_venda_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index()
+            fig_linha = px.line(df_venda_tempo, x=col_data, y=col_valor, markers=True)
+            st.plotly_chart(fig_linha, use_container_width=True)
+        else:
+            st.warning("Coluna de data não encontrada para gerar gráfico de linha.")
+
+    st.subheader("📋 Visualização dos Dados Filtrados")
+    st.dataframe(df_filtrado, use_container_width=True)
+
 else:
-    # Tela amigável caso não tenha dados ainda
-    st.warning("⚠️ Nenhuma informação encontrada.")
-    st.info("Dica: Verifique se o arquivo que você baixou está com o nome correto (vendas.xlsx) na mesma pasta deste código ou use o menu lateral para subir o arquivo.")
+    st.warning("Aguardando planilha...")
