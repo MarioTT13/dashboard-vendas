@@ -75,21 +75,42 @@ if df is not None:
 
     st.markdown("---")
 
-    # --- GRÁFICOS ---
-    col_graf1, col_graf2 = st.columns([6, 4])
+   # --- GRÁFICOS ESTILIZADOS ---
+    g1, g2 = st.columns([7, 3])
 
-    with col_graf1:
-        st.subheader("📅 Desempenho de Vendas no Tempo")
+    with g1:
+        st.subheader("📈 Evolução Estratégica de Vendas")
         if col_data:
-            df_tempo = df.groupby(col_data)[col_valor].sum().reset_index()
-            fig_lin = px.area(df_tempo, x=col_data, y=col_valor, title="Faturamento Diário", line_shape='spline')
-            st.plotly_chart(fig_lin, use_container_width=True)
+            # Agrupando e ordenando os dados
+            df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index().sort_values(by=col_data)
+            
+            # Criando o gráfico de área com suavização e estilo
+            fig_area = px.area(
+                df_tempo, 
+                x=col_data, 
+                y=col_valor,
+                markers=True,
+                line_shape="spline", # Deixa a curva suave
+                render_mode="svg"
+            )
 
-    with col_graf2:
-        st.subheader("🏆 Top Produtos/Categorias")
-        top_df = df.groupby(col_cat)[col_valor].sum().sort_values(ascending=False).reset_index()
-        fig_bar = px.bar(top_df, x=col_valor, y=col_cat, orientation='h', color=col_valor, color_continuous_scale='Blues')
-        st.plotly_chart(fig_bar, use_container_width=True)
+            # Customização Visual Avançada
+            fig_area.update_traces(
+                line_color='#00D1FF',      # Azul Neon
+                fillcolor='rgba(0, 209, 255, 0.2)', # Preenchimento suave
+                marker=dict(size=8, color='white', line=dict(width=2, color='#00D1FF'))
+            )
+
+            fig_area.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(showgrid=False, title=""),
+                yaxis=dict(showgrid=True, gridcolor='rgba(200,200,200,0.2)', title="Faturamento (R$)"),
+                margin=dict(l=0, r=0, t=30, b=0),
+                height=400
+            )
+            
+            st.plotly_chart(fig_area, use_container_width=True)
 
     # --- ANÁLISE DE PRODUTOS ---
     st.subheader("🧐 Análise Detalhada de Itens")
