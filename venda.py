@@ -81,7 +81,7 @@ if df is not None:
         st.subheader("📈 Inteligência de Mercado e Evolução")
         
         # Agrupamento e Ordenação
-        df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index().sort_values(by=col_data)
+        
         
         import plotly.graph_objects as go
 
