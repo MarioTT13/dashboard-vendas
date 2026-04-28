@@ -116,20 +116,30 @@ if df is not None:
 
     with col_graf2:
         st.subheader("🎯 Mix de Categorias")
-        # Gráfico de Rosca (Donut) - Mais moderno que a pizza comum
+        
+        # Criando o gráfico de rosca
         fig_rosca = px.pie(
             df, 
             values=col_valor, 
             names=col_cat, 
-            hole=0.6, # Furo no meio para vibe "Premium"
+            hole=0.6,
             color_discrete_sequence=px.colors.sequential.Blues_r
         )
-        fig_rosca.update_traces(textposition='inside', textinfo='percent')
-        fig_rosca.update_layout(
-            showlegend=True, 
-            margin=dict(t=30, b=0, l=0, r=0),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+
+        # AJUSTE DE POLUIÇÃO: Customizando o que aparece ao passar o mouse
+        fig_rosca.update_traces(
+            textposition='outside', # Coloca os nomes fora para não embolar
+            textinfo='label+percent',
+            hovertemplate="<b>%{label}</b><br>Faturamento: R$ %{value:,.2f}<br>Percentual: %{percent}<extra></extra>"
         )
+
+        # Ajuste de Layout para limpeza total
+        fig_rosca.update_layout(
+            showlegend=False, # Remove a legenda lateral que polui o espaço
+            margin=dict(t=30, b=0, l=0, r=0),
+            height=400
+        )
+        
         st.plotly_chart(fig_rosca, use_container_width=True)
 
     # --- ANÁLISE DE PRODUTOS ---
