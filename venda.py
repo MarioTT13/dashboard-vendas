@@ -75,68 +75,62 @@ if df is not None:
 
     st.markdown("---")
 
-  # --- ÁREA DE GRÁFICOS ESTILIZADOS ---
-    st.markdown("---")
-    if col_data:
-        st.subheader("📈 Inteligência de Mercado e Evolução")
-        
-        # Agrupamento e Ordenação
-        
-        
-        import plotly.graph_objects as go
+  # --- GRÁFICOS ESTILIZADOS ---
+    col_graf1, col_graf2 = st.columns([7, 3])
 
-        # Criando o gráfico com preenchimento em gradiente
-        fig_evolucao = go.Figure()
+    with col_graf1:
+        st.subheader("📈 Evolução Estratégica de Faturamento")
+        if col_data:
+            # Agrupando e ordenando os dados por data
+            df_tempo = df.groupby(col_data)[col_valor].sum().reset_index().sort_values(by=col_data)
+            
+            import plotly.graph_objects as go
 
-        fig_evolucao.add_trace(go.Scatter(
-            x=df_tempo[col_data], 
-            y=df_tempo[col_valor],
-            mode='lines+markers',
-            line=dict(width=4, color='#00D1FF', shape='spline'), # Linha Neon Suave
-            fill='tozeroy', # Preenchimento até o eixo zero
-            fillcolor='rgba(0, 209, 255, 0.15)', # Azul transparente
-            marker=dict(size=8, color='white', line=dict(width=2, color='#00D1FF')),
-            name='Faturamento'
-        ))
+            # Criando o gráfico de área com estilo "Neon"
+            fig_evolucao = go.Figure()
 
-        # Ajustes de Layout para "Vibe" Tech
-        fig_evolucao.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)', # Fundo transparente
-            paper_bgcolor='rgba(0,0,0,0)',
-            hovermode="x unified",
-            xaxis=dict(showgrid=False, zeroline=False),
-            yaxis=dict(
-                showgrid=True, 
-                gridcolor='rgba(200,200,200,0.1)', 
-                zeroline=False,
-                tickprefix="R$ "
-            ),
-            margin=dict(l=0, r=0, t=20, b=0),
-            height=450
-        )
+            fig_evolucao.add_trace(go.Scatter(
+                x=df_tempo[col_data], 
+                y=df_tempo[col_valor],
+                mode='lines+markers',
+                line=dict(width=4, color='#00d1ff', shape='spline'), # Linha azul neon curva
+                fill='tozeroy', 
+                fillcolor='rgba(0, 209, 255, 0.1)', # Preenchimento suave abaixo da linha
+                marker=dict(size=8, color='white', line=dict(width=2, color='#00d1ff')),
+                name='Faturamento Diário'
+            ))
 
-        st.plotly_chart(fig_evolucao, use_container_width=True)
+            fig_evolucao.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(showgrid=False, zeroline=False),
+                yaxis=dict(showgrid=True, gridcolor='rgba(200,200,200,0.1)', zeroline=False),
+                margin=dict(l=0, r=0, t=20, b=0),
+                height=400,
+                hovermode="x unified"
+            )
+            
+            st.plotly_chart(fig_evolucao, use_container_width=True)
+        else:
+            st.info("Adicione uma coluna de data para ver a evolução.")
 
-    # Gráfico de Categorias (Rosca Moderna)
-    st.markdown("---")
-    col_inf1, col_inf2 = st.columns([4, 6])
-    
-    with col_inf1:
-        st.subheader("🎯 Mix de Produtos")
+    with col_graf2:
+        st.subheader("🎯 Mix de Categorias")
+        # Gráfico de Rosca (Donut) - Mais moderno que a pizza comum
         fig_rosca = px.pie(
-            df_filtrado, 
+            df, 
             values=col_valor, 
             names=col_cat, 
-            hole=0.6,
+            hole=0.6, # Furo no meio para vibe "Premium"
             color_discrete_sequence=px.colors.sequential.Blues_r
         )
-        fig_rosca.update_traces(textposition='inside', textinfo='percent+label')
-        fig_rosca.update_layout(showlegend=False, margin=dict(t=30, b=0, l=0, r=0))
+        fig_rosca.update_traces(textposition='inside', textinfo='percent')
+        fig_rosca.update_layout(
+            showlegend=True, 
+            margin=dict(t=30, b=0, l=0, r=0),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+        )
         st.plotly_chart(fig_rosca, use_container_width=True)
-
-    with col_inf2:
-        st.subheader("📋 Visão Consolidada")
-        st.dataframe(df_filtrado[[col_prod, col_valor]].sort_values(by=col_valor, ascending=False), use_container_width=True)
 
     # --- ANÁLISE DE PRODUTOS ---
     st.subheader("🧐 Análise Detalhada de Itens")
