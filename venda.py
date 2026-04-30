@@ -74,11 +74,13 @@ if df is not None:
         st.subheader("📊 Evolução de Vendas por Período")
         df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index()
 
-        fug_barras.uptade_traces(
-            textposition='outside', 
-            textinfo='label+percent',
-            hovertemplate="<b>%{label}</b><br>Faturamento: R$ %{value:,.2f}<extra></extra>"
-        )
+       
+    fig_barras.update_traces(
+    # %{x} pega o valor do eixo horizontal e %{y} o valor do faturamento
+    hovertemplate="<b>Data:</b> %{x}<br><b>Faturamento:</b> R$ %{y:,.2f}<extra></extra>",
+    marker_color='#00D1FF' # Garante que a cor se mantenha no seu azul neon
+)
+        
         
         fig_barras = px.bar(
             df_tempo, x=col_data, y=col_valor,
