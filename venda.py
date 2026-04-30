@@ -1,150 +1,74 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
-# Configuração da página para um visual mais profissional
-st.set_page_config(page_title="Gestão Estratégica 360", layout="wide", initial_sidebar_state="expanded")
+# --- CONFIGURAÇÃO DA PÁGINA PARA CELULAR ---
+st.set_page_config(page_title="Dashboard BI Elite", layout="wide")
 
-# CSS para customizar as métricas e deixar mais chamativo
-st.markdown("""
-    <style>
-    [data-testid="stMetricValue"] { font-size: 28px; color: #007bff; }
-    .main { background-color: #f8f9fa; }
-    </style>
-    """, unsafe_allow_html=True)
+# Exemplo de dados com Preço de Compra e Venda
+data = {
+    'Produto': ['Anel Elástico', 'Eixo A', 'Eixo B', 'Retentor X', 'Gaxeta Y'],
+    'Categoria': ['Fixação', 'Eixos', 'Eixos', 'Vedação', 'Vedação'],
+    'Qtd_Vendida': [150, 80, 45, 120, 30],
+    'Preco_Compra': [1.50, 45.00, 55.00, 12.00, 25.00],
+    'Preco_Venda': [3.50, 85.00, 95.00, 28.00, 58.00],
+    'Data': pd.date_range(start='2024-01-01', periods=5, freq='D')
+}
+df = pd.DataFrame(data)
 
-st.title("🚀 Dashboard de Gestão Estratégica")
+# Cálculos de Margem
+df['Faturamento'] = df['Qtd_Vendida'] * df['Preco_Venda']
+df['Lucro_Total'] = (df['Preco_Venda'] - df['Preco_Compra']) * df['Qtd_Vendida']
+
+st.title("🚀 Inteligência Comercial")
+
+# --- BLOCO 1: MÉTRICAS (Fica ótimo no celular) ---
+m1, m2 = st.columns(2)
+with m1:
+    st.metric("Faturamento Total", f"R$ {df['Faturamento'].sum():,.2f}")
+with m2:
+    st.metric("Lucro Estimado", f"R$ {df['Lucro_Total'].sum():,.2f}", delta="15%")
+
 st.markdown("---")
 
-# --- CARREGAMENTO DE DADOS ---
-@st.cache_data # Cache para carregar rápido
-def load_data(file):
-    if file is not None:
-        return pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-    try:
-        return pd.read_excel("vendas.xlsx")
-    except:
-        return None
+# --- BLOCO 2: O GRÁFICO DE VELAS (ESTILO TRADING) ---
+st.subheader("📊 Tendência de Valorização (Velas)")
+# Simulando dados de OHLC (Abertura, Máximo, Mínimo, Fechamento) para o visual
+fig_velas = go.Figure(data=[go.Candlestick(
+    x=df['Data'],
+    open=df['Preco_Venda'] * 0.9,
+    high=df['Preco_Venda'] * 1.1,
+    low=df['Preco_Venda'] * 0.8,
+    close=df['Preco_Venda'],
+    increasing_line_color= '#00cc96', decreasing_line_color= '#ff3e3e'
+)])
+fig_velas.update_layout(xaxis_rangeslider_visible=False, template="plotly_dark", height=300, margin=dict(l=20, r=20, t=20, b=20))
+st.plotly_chart(fig_velas, use_container_width=True)
 
-file = st.sidebar.file_uploader("📂 Atualizar Base de Dados", type=["xlsx", "csv"])
-df = load_data(file)
+# --- BLOCO 3: RANKING DE PRODUTOS (O QUE MAIS SAI VS MENOS SAI) ---
+st.subheader("🏆 Ranking de Performance")
+tab1, tab2 = st.tabs(["🔝 Top Saída", "📉 Menos Saída"])
 
-if df is not None:
-    # Padronização de colunas (Lógica Detetive)
-    cols = df.columns.tolist()
-    col_valor = next((c for c in cols if any(kw in c.lower() for kw in ['valor', 'venda', 'total'])), None)
-    col_custo = next((c for c in cols if any(kw in c.lower() for kw in ['custo'])), None)
-    col_data = next((c for c in cols if any(kw in c.lower() for kw in ['data', 'dia'])), None)
-    col_prod = next((c for c in cols if any(kw in c.lower() for kw in ['produto', 'item', 'desc'])), cols[0])
-    col_cat = next((c for c in cols if any(kw in c.lower() for kw in ['cat'])), col_prod)
+with tab1:
+    top_vendas = df.nlargest(5, 'Qtd_Vendida')[['Produto', 'Qtd_Vendida', 'Preco_Venda']]
+    st.table(top_vendas)
 
-    if col_data:
-        df[col_data] = pd.to_datetime(df[col_data])
+with tab2:
+    bottom_vendas = df.nsmallest(5, 'Qtd_Vendida')[['Produto', 'Qtd_Vendida', 'Preco_Venda']]
+    st.table(bottom_vendas)
 
-    # --- FILTROS LATERAIS ---
-    st.sidebar.subheader("🔍 Filtros de Decisão")
-    
-    if col_data:
-        min_d, max_d = df[col_data].min().date(), df[col_data].max().date()
-        periodo = st.sidebar.date_input("Período de Análise", [min_d, max_d])
-        if len(periodo) == 2:
-            df = df[(df[col_data].dt.date >= periodo[0]) & (df[col_data].dt.date <= periodo[1])]
-
-    categorias = st.sidebar.multiselect("Filtrar Categorias", df[col_cat].unique(), default=df[col_cat].unique())
-    df = df[df[col_cat].isin(categorias)]
-
-    # --- CÁLCULOS ESTRATÉGICOS ---
-    faturamento = df[col_valor].sum()
-    qtd_vendas = len(df)
-    ticket_medio = faturamento / qtd_vendas if qtd_vendas > 0 else 0
-    
-    # Cálculo de Lucro (se houver coluna de custo)
-    if col_custo:
-        lucro_total = (df[col_valor] - df[col_custo]).sum()
-        margem = (lucro_total / faturamento) * 100 if faturamento > 0 else 0
-    else:
-        lucro_total = faturamento * 0.3 # Estimativa de 30% se não houver custo
-        margem = 30.0
-
-    # --- KPIs (INDICADORES CHAVE) ---
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    kpi1.metric("💰 Faturamento", f"R$ {faturamento:,.2f}")
-    kpi2.metric("📈 Lucro Estimado", f"R$ {lucro_total:,.2f}")
-    kpi3.metric("🛒 Ticket Médio", f"R$ {ticket_medio:,.2f}")
-    kpi4.metric("📊 Margem", f"{margem:.1f}%")
-
-    st.markdown("---")
-
-  # --- GRÁFICOS ESTILIZADOS ---
-    col_graf1, col_graf2 = st.columns([7, 3])
-
-    with col_graf1:
-        st.subheader("📈 Evolução Estratégica de Faturamento")
-        if col_data:
-            # Agrupando e ordenando os dados por data
-            df_tempo = df.groupby(col_data)[col_valor].sum().reset_index().sort_values(by=col_data)
-            
-            import plotly.graph_objects as go
-
-            # Criando o gráfico de área com estilo "Neon"
-            fig_evolucao = go.Figure()
-
-            fig_evolucao.add_trace(go.Scatter(
-                x=df_tempo[col_data], 
-                y=df_tempo[col_valor],
-                mode='lines+markers',
-                line=dict(width=4, color='#00d1ff', shape='spline'), # Linha azul neon curva
-                fill='tozeroy', 
-                fillcolor='rgba(0, 209, 255, 0.1)', # Preenchimento suave abaixo da linha
-                marker=dict(size=8, color='white', line=dict(width=2, color='#00d1ff')),
-                name='Faturamento Diário'
-            ))
-
-            fig_evolucao.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                xaxis=dict(showgrid=False, zeroline=False),
-                yaxis=dict(showgrid=True, gridcolor='rgba(200,200,200,0.1)', zeroline=False),
-                margin=dict(l=0, r=0, t=20, b=0),
-                height=400,
-                hovermode="x unified"
-            )
-            
-            st.plotly_chart(fig_evolucao, use_container_width=True)
-        else:
-            st.info("Adicione uma coluna de data para ver a evolução.")
-
-    with col_graf2:
-        st.subheader("🎯 Mix de Categorias")
-        
-        # Criando o gráfico de rosca
-        fig_rosca = px.pie(
-            df, 
-            values=col_valor, 
-            names=col_cat, 
-            hole=0.6,
-            color_discrete_sequence=px.colors.sequential.Blues_r
-        )
-
-        # AJUSTE DE POLUIÇÃO: Customizando o que aparece ao passar o mouse
-        fig_rosca.update_traces(
-            textposition='outside', # Coloca os nomes fora para não embolar
-            textinfo='label+percent',
-            hovertemplate="<b>%{label}</b><br>Faturamento: R$ %{value:,.2f}<br>Percentual: %{percent}<extra></extra>"
-        )
-
-        # Ajuste de Layout para limpeza total
-        fig_rosca.update_layout(
-            showlegend=False, # Remove a legenda lateral que polui o espaço
-            margin=dict(t=30, b=0, l=0, r=0),
-            height=400
-        )
-        
-        st.plotly_chart(fig_rosca, use_container_width=True)
-
-    # --- ANÁLISE DE PRODUTOS ---
-    st.subheader("🧐 Análise Detalhada de Itens")
-    st.dataframe(df[[col_prod, col_cat, col_valor]].sort_values(by=col_valor, ascending=False), use_container_width=True)
-
-else:
-    st.warning("Aguardando base de dados para análise...")
+# --- BLOCO 4: DETALHAMENTO DE PREÇOS E MARGEM ---
+st.subheader("💰 Análise de Margem por Item")
+# Criando um gráfico de barras horizontais para ver o lucro por produto
+fig_margem = px.bar(
+    df, 
+    x='Lucro_Total', 
+    y='Produto', 
+    orientation='h',
+    text_auto='.2s',
+    color='Lucro_Total',
+    color_continuous_scale='Blues'
+)
+fig_margem.update_layout(template="plotly_dark", height=300)
+st.plotly_chart(fig_margem, use_container_width=True)
