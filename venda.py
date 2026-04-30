@@ -126,6 +126,15 @@ with c_right:
         with tab2:
             st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
             
-        st.markdown("---")
-        st.subheader("📄 Base de Dados")
-        st.dataframe(df_filtrado, use_container_width=True)
+        # ... (restante do código de gráficos acima)
+
+    # --- BASE DE DADOS AMPLIADA ---
+    st.markdown("---")
+    st.subheader("📄 Base de Dados Completa")
+    
+    # Exibindo o dataframe fora de colunas para ele usar 100% da largura da página
+    st.dataframe(
+        df_filtrado, 
+        use_container_width=True, 
+        height=500  # Definindo uma altura fixa maior para a tabela
+    )
