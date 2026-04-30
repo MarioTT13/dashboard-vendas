@@ -129,7 +129,7 @@ with c_right:
         # ... (restante do código de gráficos acima)
 
     # --- BASE DE DADOS AMPLIADA ---
-    st.markdown("---")
+    st.markdown("")
     st.subheader("📄 Base de Dados Completa")
     
     # Exibindo o dataframe fora de colunas para ele usar 100% da largura da página
