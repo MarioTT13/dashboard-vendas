@@ -126,6 +126,6 @@ with c_right:
         with tab2:
             st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
             
-    st.markdown("---")
-    with st.expander("📂 Base de Dados"):
+        st.markdown("---")
+            with st.expander("📂 Base de Dados"):
         st.dataframe(df_filtrado, use_container_width=True)
