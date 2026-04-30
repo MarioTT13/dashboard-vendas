@@ -69,24 +69,21 @@ if df is not None:
 
     st.markdown("---")
 
-  # --- GRÁFICO DE BARRAS (O que você preferiu) ---
+ # --- GRÁFICO DE BARRAS (Versão Organizada) ---
     if col_data:
         st.subheader("📊 Evolução de Vendas por Período")
         df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index()
 
-       
-    fig_barras.update_traces(
-    # %{x} pega o valor do eixo horizontal e %{y} o valor do faturamento
-    hovertemplate="<b>Data:</b> %{x}<br><b>Faturamento:</b> R$ %{y:,.2f}<extra></extra>",
-    marker_color='#00D1FF' # Garante que a cor se mantenha no seu azul neon
-)
-        
-        
         fig_barras = px.bar(
             df_tempo, x=col_data, y=col_valor,
-            color=col_valor, # Barra muda de cor conforme o valor (Efeito visual top)
+            color=col_valor, 
             color_continuous_scale='Blues',
             text_auto='.2s'
+        )
+        
+        # --- FUNÇÃO QUE ARRUMA A BAGUNÇA DO MOUSE (HOVER) ---
+        fig_barras.update_traces(
+            hovertemplate="<b>Data:</b> %{x|%d/%m/%Y}<br><b>Faturamento:</b> R$ %{y:,.2f}<extra></extra>"
         )
         
         fig_barras.update_layout(
