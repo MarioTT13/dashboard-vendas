@@ -73,6 +73,12 @@ if df is not None:
     if col_data:
         st.subheader("📊 Evolução de Vendas por Período")
         df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index()
+
+        fug_barras.uptade_traces(
+            textposition='outside', 
+            textinfo='label+percent',
+            hovertemplate="<b>%{label}</b><br>Faturamento: R$ %{value:,.2f}<extra></extra>"
+        )
         
         fig_barras = px.bar(
             df_tempo, x=col_data, y=col_valor,
@@ -113,14 +119,14 @@ if df is not None:
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
 
-    with c_right:
+   with col_inf2:
         st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+        tab1, tab2 = st.tabs(["🔝 Mais Vendidos", "📉 Menos Vendidos"])
         with tab1:
             st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(5).reset_index(), use_container_width=True, hide_index=True)
         with tab2:
             st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
-
+            
     st.markdown("---")
     with st.expander("📂 Base de Dados"):
         st.dataframe(df_filtrado, use_container_width=True)
