@@ -133,7 +133,7 @@ with c_right:
         st.subheader("📄 Base de Dados Completa")
     
     # Exibindo o dataframe fora de colunas para ele usar 100% da largura da página
-    st.dataframe(
+        st.dataframe(
         df_filtrado, 
         use_container_width=True, 
         height=500  # Definindo uma altura fixa maior para a tabela
