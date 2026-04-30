@@ -96,7 +96,7 @@ if df is not None:
         st.plotly_chart(fig_barras, use_container_width=True)
     st.markdown("---")
     
-    # --- RANKINGS E MIX ---
+    # --- RANKINGS E MIX (Dividido em 2 colunas) ---
     c_left, c_right = st.columns([1, 1])
 
     with c_left:
@@ -118,23 +118,21 @@ if df is not None:
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
 
-with c_right:
+    with c_right:
         st.subheader("🏆 Performance de Itens")
         tab1, tab2 = st.tabs(["🚀 Top Vendas", "📉 Menos Vendidos"])
         with tab1:
-            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(5).reset_index(), use_container_width=True, hide_index=True)
+            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(10).reset_index(), use_container_width=True, hide_index=True)
         with tab2:
-            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
-            
-        # ... (restante do código de gráficos acima)
+            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(10).reset_index(), use_container_width=True, hide_index=True)
 
-    # --- BASE DE DADOS AMPLIADA ---
-        st.markdown("---")
-        st.subheader("📄 Base de Dados Completa")
+    # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
+    # Note que o código abaixo não tem o 'with c_right' na frente dele
+    st.markdown("---")
+    st.subheader("📄 Base de Dados Completa")
     
-    # Exibindo o dataframe fora de colunas para ele usar 100% da largura da página
-        st.dataframe(
+    st.dataframe(
         df_filtrado, 
         use_container_width=True, 
-        height=500  # Definindo uma altura fixa maior para a tabela
+        height=600 # Aumentado para ficar bem grande
     )
