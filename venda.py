@@ -118,13 +118,13 @@ if df is not None:
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
 
-   with c_right:
+  with c_right:
         st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🔝 Mais Vendidos", "📉 Menos Vendidos"])
+        tab1, tab2 = st.tabs(["🚀 Top Vendas", "📉 Menos Vendidos"])
         with tab1:
             st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(5).reset_index(), use_container_width=True, hide_index=True)
         with tab2:
-            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
+            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)ex=True)
             
     st.markdown("---")
     with st.expander("📂 Base de Dados"):
