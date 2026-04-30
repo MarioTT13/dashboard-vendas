@@ -15,7 +15,7 @@ st.markdown("""
 
 st.title("🚀 Dashboard de Gestão Estratégica")
 
-# --- CARREGAMENTO ROBUSTO (SEU CÓDIGO) ---
+# --- CARREGAMENTO ROBUSTO ---
 def load_data(file):
     if file is not None:
         return pd.read_excel(file) if any(file.name.endswith(ext) for ext in ['xlsx', 'xls', 'xlns']) else pd.read_csv(file)
@@ -35,8 +35,17 @@ if df is not None:
     col_prod = next((c for c in cols if any(kw in c.lower() for kw in ['produto', 'item'])), cols[0])
     col_cat = next((c for c in cols if any(kw in c.lower() for kw in ['cat'])), col_prod)
 
+    # --- FILTROS NA SIDEBAR ---
+    st.sidebar.header("🔍 Filtros de Análise")
+    
     df_filtrado = df.copy()
 
+    # Filtro de Categoria (Multiselect)
+    lista_categorias = df[col_cat].unique().tolist()
+    categorias_selecionadas = st.sidebar.multiselect("Filtrar por Categoria", lista_categorias, default=lista_categorias)
+    df_filtrado = df_filtrado[df_filtrado[col_cat].isin(categorias_selecionadas)]
+
+    # Filtro de Data
     if col_data:
         df_filtrado[col_data] = pd.to_datetime(df_filtrado[col_data])
         min_d, max_d = df_filtrado[col_data].min().date(), df_filtrado[col_data].max().date()
@@ -56,57 +65,47 @@ if df is not None:
 
     st.markdown("---")
 
-    # --- NOVO: GRÁFICO DE VELAS (Substituindo a linha simples) ---
+    # --- GRÁFICO DE VELAS ---
     if col_data:
-        st.subheader("📈 Inteligência de Mercado e Evolução (Velas)")
-        
+        st.subheader("📈 Inteligência de Mercado (Velas)")
         df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index().sort_values(by=col_data)
-        
-        # Criando o gráfico de Velas simulado pela variação do faturamento diário
         fig_velas = go.Figure(data=[go.Candlestick(
             x=df_tempo[col_data],
-            open=df_tempo[col_valor] * 0.9,
-            high=df_tempo[col_valor] * 1.1,
-            low=df_tempo[col_valor] * 0.8,
+            open=df_tempo[col_valor] * 0.95,
+            high=df_tempo[col_valor] * 1.05,
+            low=df_tempo[col_valor] * 0.90,
             close=df_tempo[col_valor],
-            increasing_line_color='#00D1FF', # Seu Azul Neon
-            decreasing_line_color='#FF3E3E'  # Vermelho para queda
+            increasing_line_color='#00D1FF',
+            decreasing_line_color='#FF3E3E'
         )])
-
-        fig_velas.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_rangeslider_visible=False,
-            height=400,
-            margin=dict(l=0, r=0, t=0, b=0)
-        )
+        fig_velas.update_layout(xaxis_rangeslider_visible=False, height=350, template="plotly_dark")
         st.plotly_chart(fig_velas, use_container_width=True)
 
-    # --- SEÇÃO DE MIX (SUA ROSCA ORIGINAL) ---
     st.markdown("---")
     col_inf1, col_inf2 = st.columns([4, 6])
     
     with col_inf1:
-        st.subheader("🎯 Mix por Categoria")
+        st.subheader("🎯 Mix de Categorias")
         fig_rosca = px.pie(df_filtrado, values=col_valor, names=col_cat, hole=0.6,
                            color_discrete_sequence=px.colors.sequential.Blues_r)
-        fig_rosca.update_traces(textposition='outside', textinfo='label+percent')
+        
+        # AJUSTE DE LIMPEZA NO HOVER (MOUSE EM CIMA)
+        fig_rosca.update_traces(
+            textposition='outside', 
+            textinfo='label+percent',
+            hovertemplate="<b>%{label}</b><br>Valor: R$ %{value:,.2f}<extra></extra>" # <extra></extra> remove o nome do gráfico que fica do lado
+        )
         fig_rosca.update_layout(showlegend=False, margin=dict(t=30, b=0, l=0, r=0))
         st.plotly_chart(fig_rosca, use_container_width=True)
 
-    # --- NOVO: RANKING DE PRODUTOS (TOP VS BOTTOM) ---
     with col_inf2:
-        st.subheader("🏆 Performance de Produtos")
+        st.subheader("🏆 Performance de Itens")
         tab1, tab2 = st.tabs(["🔝 Mais Vendidos", "📉 Menos Vendidos"])
-        
         with tab1:
-            top_prod = df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(5).reset_index()
-            st.dataframe(top_prod, use_container_width=True, hide_index=True)
-            
+            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(5).reset_index(), use_container_width=True, hide_index=True)
         with tab2:
-            bottom_prod = df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index()
-            st.dataframe(bottom_prod, use_container_width=True, hide_index=True)
+            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(5).reset_index(), use_container_width=True, hide_index=True)
 
-    # --- BASE DE DADOS (SUA PLANILHA NO FINAL) ---
     st.markdown("---")
-    st.subheader("📄 Base de Dados Completa")
+    st.subheader("📄 Base de Dados")
     st.dataframe(df_filtrado, use_container_width=True)
