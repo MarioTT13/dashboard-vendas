@@ -129,26 +129,32 @@ if df is not None:
             col_qtd: 'sum' if col_qtd else 'count' # Se não houver coluna de qtd, ele conta as linhas
         }).reset_index()
 
-        # Renomeando as colunas para ficar amigável no Dashboard
-        df_performance.columns = ['Produto', 'Total Vendido (R$)', 'Qtd Saída']
+            with c_right:
+        st.subheader("🏆 Performance de Itens")
+        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+        
+        # Agrupamento (Alinhado com o comando acima)
+        df_perf = df_filtrado.groupby(col_prod).agg({
+            col_valor: 'sum',
+            col_qtd: 'sum' if col_qtd else 'count'
+        }).reset_index()
+
+        df_perf.columns = ['Produto', 'Total Vendido (R$)', 'Qtd Saída']
 
         with tab1:
-            # Ordenando pelos mais vendidos em valor
-            top_5 = df_performance.nlargest(5, 'Total Vendido (R$)')
-            st.dataframe(top_5, use_container_width=True, hide_index=True)
+            # Esta linha precisa estar 4 espaços à frente do 'with tab1'
+            top_vendas = df_perf.nlargest(5, 'Total Vendido (R$)')
+            st.dataframe(top_vendas, use_container_width=True, hide_index=True)
             
         with tab2:
-            # Ordenando pelos menos vendidos em valor
-            bottom_5 = df_performance.nsmallest(5, 'Total Vendido (R$)')
-            st.dataframe(bottom_5, use_container_width=True, hide_index=True)
+            # Esta linha precisa estar 4 espaços à frente do 'with tab2'
+            piores_vendas = df_perf.nsmallest(5, 'Total Vendido (R$)')
+            st.dataframe(piores_vendas, use_container_width=True, hide_index=True)
 
-    # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
-    # Note que o código abaixo não tem o 'with c_right' na frente dele
+    # --- BASE DE DADOS (FORA DAS COLUNAS) ---
     st.markdown("---")
     st.subheader("📄 Base de Dados Completa")
+    st.dataframe(df_filtrado, use_container_width=True, height=600)
+=True, hide_index=True)
+
     
-    st.dataframe(
-        df_filtrado, 
-        use_container_width=True, 
-        height=600 # Aumentado para ficar bem grande
-    )
