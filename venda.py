@@ -129,9 +129,9 @@ if df is not None:
             col_qtd: 'sum' if col_qtd else 'count' # Se não houver coluna de qtd, ele conta as linhas
         }).reset_index()
 
-            with c_right:
-        st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+        with c_right:
+         st.subheader("🏆 Performance de Itens")
+         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
         
         # Agrupamento (Alinhado com o comando acima)
         df_perf = df_filtrado.groupby(col_prod).agg({
