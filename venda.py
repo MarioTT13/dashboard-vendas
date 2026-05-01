@@ -160,7 +160,7 @@ if df is not None:
     # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
     # Note que o código abaixo não tem o 'with c_right' na frente dele
     st.markdown("---")
-    s.t.subheader("📄 Base de Dados Completa")
+    st.subheader("📄 Base de Dados Completa")
     
     st.dataframe(
         df_filtrado, 
