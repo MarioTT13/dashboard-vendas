@@ -151,10 +151,16 @@ if df is not None:
             piores_vendas = df_perf.nsmallest(5, 'Total Vendido (R$)')
             st.dataframe(piores_vendas, use_container_width=True, hide_index=True)
 
-    # --- BASE DE DADOS (FORA DAS COLUNAS) ---
-    st.markdown("---")
-    st.subheader("📄 Base de Dados Completa")
-    st.dataframe(df_filtrado, use_container_width=True, height=600)
-=True, hide_index=True)
+    # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
+    # Note que o código abaixo não tem o 'with c_right' na frente dele
+     st.markdown("---")
+     s.t.subheader("📄 Base de Dados Completa")
+    
+    st.dataframe(
+        df_filtrado, 
+        use_container_width=True, 
+        height=600 # Aumentado para ficar bem grande
+    )
+
 
     
