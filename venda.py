@@ -118,13 +118,29 @@ if df is not None:
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
 
-    with c_right:
+        with c_right:
         st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🚀 Top Vendas", "📉 Menos Vendidos"])
+        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+        
+        # Criando o agrupamento com múltiplas agregações
+        # Agrupamos por produto e somamos o Valor e a Quantidade
+        df_performance = df_filtrado.groupby(col_prod).agg({
+            col_valor: 'sum',
+            col_qtd: 'sum' if col_qtd else 'count' # Se não houver coluna de qtd, ele conta as linhas
+        }).reset_index()
+
+        # Renomeando as colunas para ficar amigável no Dashboard
+        df_performance.columns = ['Produto', 'Total Vendido (R$)', 'Qtd Saída']
+
         with tab1:
-            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nlargest(10).reset_index(), use_container_width=True, hide_index=True)
+            # Ordenando pelos mais vendidos em valor
+            top_5 = df_performance.nlargest(5, 'Total Vendido (R$)')
+            st.dataframe(top_5, use_container_width=True, hide_index=True)
+            
         with tab2:
-            st.dataframe(df_filtrado.groupby(col_prod)[col_valor].sum().nsmallest(10).reset_index(), use_container_width=True, hide_index=True)
+            # Ordenando pelos menos vendidos em valor
+            bottom_5 = df_performance.nsmallest(5, 'Total Vendido (R$)')
+            st.dataframe(bottom_5, use_container_width=True, hide_index=True)
 
     # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
     # Note que o código abaixo não tem o 'with c_right' na frente dele
