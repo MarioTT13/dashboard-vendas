@@ -122,12 +122,22 @@ if df is not None:
          st.subheader("🏆 Performance de Itens")
          tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
         
-        # Criando o agrupamento com múltiplas agregações
-        # Agrupamos por produto e somamos o Valor e a Quantidade
-        df_performance = df_filtrado.groupby(col_prod).agg({
-            col_valor: 'sum',
-            col_qtd: 'sum' if col_qtd else 'count' # Se não houver coluna de qtd, ele conta as linhas
-        }).reset_index()
+        # --- Lógica de Agrupamento Protegida ---
+        # Criamos um dicionário apenas com as colunas que realmente existem
+        agg_dict = {col_valor: 'sum'}
+        
+        # Só adiciona quantidade se a coluna foi encontrada
+        if col_qtd:
+            agg_dict[col_qtd] = 'sum'
+
+        df_perf = df_filtrado.groupby(col_prod).agg(agg_dict).reset_index()
+
+        # Ajusta os nomes das colunas dinamicamente
+        colunas_finais = ['Produto', 'Total Vendido (R$)']
+        if col_qtd:
+            colunas_finais.append('Qtd Saída')
+        
+        df_perf.columns = colunas_finais
 
         with c_right:
          st.subheader("🏆 Performance de Itens")
