@@ -121,7 +121,7 @@ if df is not None:
 
         with c_right:
          st.subheader("🏆 Performance de Itens")
-         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Saidas baixas"])
         
       # --- Agrupamento Inteligente ---
         # 1. Começamos apenas com o valor (que sabemos que existe)
