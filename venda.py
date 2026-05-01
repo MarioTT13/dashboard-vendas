@@ -122,22 +122,6 @@ if df is not None:
          st.subheader("🏆 Performance de Itens")
          tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
         
-        # --- Lógica de Agrupamento Protegida ---
-        # Criamos um dicionário apenas com as colunas que realmente existem
-        agg_dict = {col_valor: 'sum'}
-        
-        # Só adiciona quantidade se a coluna foi encontrada
-        if col_qtd:
-            agg_dict[col_qtd] = 'sum'
-
-        df_perf = df_filtrado.groupby(col_prod).agg(agg_dict).reset_index()
-
-        # Ajusta os nomes das colunas dinamicamente
-        colunas_finais = ['Produto', 'Total Vendido (R$)']
-        if col_qtd:
-            colunas_finais.append('Qtd Saída')
-        
-        df_perf.columns = colunas_finais
 
         with c_right:
          st.subheader("🏆 Performance de Itens")
