@@ -123,7 +123,7 @@ if df is not None:
          st.subheader("🏆 Performance de Itens")
          tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Saidas baixas"])
         
-      # --- Agrupamento Inteligente ---
+        # --- Agrupamento Inteligente ---
         # 1. Começamos apenas com o valor (que sabemos que existe)
         agg_dict = {col_valor: 'sum'}
         colunas_finais = ['Produto', 'Total Vendido (R$)']
@@ -135,7 +135,7 @@ if df is not None:
         else:
             # Opcional: Se não tiver coluna de Qtd, conta as linhas como saída
             agg_dict[col_valor] = ['sum', 'count']
-            colunas_finais.append('Qtd (Linhas)')
+            colunas_finais.append('Qtd Saidas')
 
         # 3. Faz o agrupamento
         df_perf = df_filtrado.groupby(col_prod).agg(agg_dict).reset_index()
