@@ -117,10 +117,6 @@ if df is not None:
             paper_bgcolor='rgba(0,0,0,0)'
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
-
-        with c_right:
-         st.subheader("🏆 Performance de Itens")
-         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
         
 
         with c_right:
