@@ -119,8 +119,8 @@ if df is not None:
         st.plotly_chart(fig_rosca, use_container_width=True)
 
         with c_right:
-        st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
+         st.subheader("🏆 Performance de Itens")
+         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Atenção"])
         
         # Criando o agrupamento com múltiplas agregações
         # Agrupamos por produto e somamos o Valor e a Quantidade
