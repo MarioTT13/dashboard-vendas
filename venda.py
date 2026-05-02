@@ -51,14 +51,31 @@ if df is not None:
         if len(periodo) == 2:
             df_filtrado = df_filtrado[(df_filtrado[col_data].dt.date >= periodo[0]) & (df_filtrado[col_data].dt.date <= periodo[1])]
 
-    # --- CÁLCULOS DAS MÉTRICAS ---
-    faturamento = df_filtrado[col_valor].sum()
-    lucro = (df_filtrado[col_valor] - df_filtrado[col_custo]).sum() if col_custo else faturamento * 0.3
-    margem = (lucro / faturamento * 100) if faturamento > 0 else 0
+   # --- CÁLCULOS DAS MÉTRICAS (CORRIGIDO) ---
+# Criamos o Faturamento Total por linha primeiro (Preço x Qtd)
+if col_qtd:
+    df_filtrado['Faturamento_Real'] = df_filtrado[col_valor] * df_filtrado[col_qtd]
+else:
+    df_filtrado['Faturamento_Real'] = df_filtrado[col_valor]
+
+# Agora usamos o Faturamento_Real para todas as contas
+faturamento = df_filtrado['Faturamento_Real'].sum()
+
+# Cálculo do Lucro (Usando o faturamento real)
+if col_custo:
+    # Se tiver custo, lucro é (Preço Total - Custo Total)
+    # Importante: Verifique se o seu custo também precisa ser multiplicado pela Qtd!
+    total_custo = (df_filtrado[col_custo] * df_filtrado[col_qtd]).sum() if col_qtd else df_filtrado[col_custo].sum()
+    lucro = faturamento - total_custo
+else:
+    lucro = faturamento * 0.3
+
+margem = (lucro / faturamento * 100) if faturamento > 0 else 0
+
+# Cálculo do Ticket Médio
+qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
+ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
     
-    # Cálculo do Ticket Médio (Faturamento / Quantidade Total de Itens)
-    qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
-    ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
 
     # --- EXIBIÇÃO DAS MÉTRICAS (4 Colunas) ---
     m1, m2, m3, m4 = st.columns(4)
@@ -72,7 +89,8 @@ if df is not None:
  # --- GRÁFICO DE BARRAS (Versão Organizada) ---
     if col_data:
         st.subheader("📊 Evolução de Vendas por Período")
-        df_tempo = df_filtrado.groupby(col_data)[col_valor].sum().reset_index()
+        # Em vez de somar [col_valor], some ['Faturamento_Real']
+        df_tempo = df_filtrado.groupby(col_data)['Faturamento_Real'].sum().reset_index()
 
         fig_barras = px.bar(
             df_tempo, x=col_data, y=col_valor,
