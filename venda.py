@@ -119,40 +119,49 @@ if df is not None:
         st.plotly_chart(fig_rosca, use_container_width=True)
         
 
-        with c_right:
-         st.subheader("🏆 Performance de Itens")
-         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Saidas baixas"])
+       with c_right:
+        st.subheader("🏆 Performance de Itens")
+        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Menos Vendidos"])
         
-        # --- Agrupamento Inteligente ---
-        # 1. Começamos apenas com o valor (que sabemos que existe)
-        agg_dict = {col_valor: 'sum'}
-        colunas_finais = ['Produto', 'Total Vendido (R$)']
+        # 1. Agrupamento e soma real
+        # Se col_qtd existir, somamos os valores reais da planilha
+        df_perf = df_filtrado.groupby(col_prod).agg({
+            col_valor: 'sum',
+            col_qtd: 'sum' if col_qtd else 'count' # Se não tiver a coluna, ele conta as ocorrências
+        }).reset_index()
 
-        # 2. Só adicionamos a quantidade se a coluna foi detectada
-        if col_qtd:
-            agg_dict[col_qtd] = 'sum'
-            colunas_finais.append('Qtd Saída')
-        else:
-            # Opcional: Se não tiver coluna de Qtd, conta as linhas como saída
-            agg_dict[col_valor] = ['sum', 'count']
-            colunas_finais.append('Qtd Saidas')
+        # 2. Renomeando para nomes amigáveis
+        df_perf.columns = ['Produto', 'Faturamento Total', 'Qtd Saída']
 
-        # 3. Faz o agrupamento
-        df_perf = df_filtrado.groupby(col_prod).agg(agg_dict).reset_index()
+        # 3. Limpeza: Remove itens com valores zerados ou nomes estranhos
+        df_perf = df_perf[df_perf['Faturamento Total'] > 0]
         
-        # Ajusta os nomes das colunas
-        df_perf.columns = colunas_finais
-
         with tab1:
-            # Esta linha precisa estar 4 espaços à frente do 'with tab1'
-            top_vendas = df_perf.nlargest(5, 'Total Vendido (R$)')
-            st.dataframe(top_vendas, use_container_width=True, hide_index=True)
+            # Ordena pelos que MAIS faturaram
+            top_vendas = df_perf.nlargest(5, 'Faturamento Total')
+            
+            # Formatação "REAL": Coloca R$ e separa milhares
+            st.dataframe(
+                top_vendas.style.format({
+                    'Faturamento Total': 'R$ {:,.2f}',
+                    'Qtd Saída': '{:,.0f} unid.'
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
             
         with tab2:
-            # Esta linha precisa estar 4 espaços à frente do 'with tab2'
-            piores_vendas = df_perf.nsmallest(5, 'Total Vendido (R$)')
-            st.dataframe(piores_vendas, use_container_width=True, hide_index=True)
-
+            # Ordena pelos que MENOS faturaram
+            bottom_vendas = df_perf.nsmallest(5, 'Faturamento Total')
+            
+            st.dataframe(
+                bottom_vendas.style.format({
+                    'Faturamento Total': 'R$ {:,.2f}',
+                    'Qtd Saída': '{:,.0f} unid.'
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
     # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
     # Note que o código abaixo não tem o 'with c_right' na frente dele
     st.markdown("---")
