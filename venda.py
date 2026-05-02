@@ -72,9 +72,9 @@ else:
 
     margem = (lucro / faturamento * 100) if faturamento > 0 else 0
 
-# Cálculo do Ticket Médio
- qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
- ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
+   # Cálculo do Ticket Médio
+   qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
+   ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
     
  # --- EXIBIÇÃO DAS MÉTRICAS (4 Colunas) ---
      m1, m2, m3, m4 = st.columns(4)
