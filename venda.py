@@ -120,8 +120,8 @@ if df is not None:
         
 
         with c_right:
-        st.subheader("🏆 Performance de Itens")
-        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Menos Vendidos"])
+         st.subheader("🏆 Performance de Itens")
+         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Menos Vendidos"])
         
         # 1. Agrupamento e soma real
         # Se col_qtd existir, somamos os valores reais da planilha
