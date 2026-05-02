@@ -75,13 +75,14 @@ else:
     qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
     ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
     
- # --- EXIBIÇÃO DAS MÉTRICAS (4 Colunas) ---
+    # --- EXIBIÇÃO DAS MÉTRICAS (Fora de qualquer 'if' de erro) ---
+    st.markdown("---") # Isso ajuda a ver se o código chegou aqui
     m1, m2, m3, m4 = st.columns(4)
+
     m1.metric("💰 Faturamento", f"R$ {faturamento:,.2f}")
     m2.metric("📈 Lucro Real", f"R$ {lucro:,.2f}")
     m3.metric("🎯 Margem", f"{margem:.1f}%")
     m4.metric("🎫 Ticket Médio", f"R$ {ticket_medio:,.2f}")
-
     st.markdown("---")
  # --- GRÁFICO DE BARRAS (Versão Organizada) ---
     if col_data:
