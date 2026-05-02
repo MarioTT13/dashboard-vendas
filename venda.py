@@ -70,7 +70,7 @@ if col_custo:
 else:
     lucro = faturamento * 0.3
 
- margem = (lucro / faturamento * 100) if faturamento > 0 else 0
+    margem = (lucro / faturamento * 100) if faturamento > 0 else 0
 
 # Cálculo do Ticket Médio
  qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
