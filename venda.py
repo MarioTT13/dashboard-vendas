@@ -163,10 +163,23 @@ if df is not None:
             )
 
     st.markdown("---")
+    # --- BASE DE DADOS AMPLIADA COM FORMATAÇÃO ---
+    st.markdown("---")
     st.subheader("📄 Base de Dados Completa")
-    st.dataframe(df_filtrado, use_container_width=True, height=400)
-else:
-    st.info("Aguardando upload da base de dados...")
+    
+    # Criamos um dicionário de formatação para as colunas numéricas existentes
+    format_dict = {}
+    if col_valor: format_dict[col_valor] = "R$ {:,.2f}"
+    if 'Faturamento_Real' in df_filtrado.columns: format_dict['Faturamento_Real'] = "R$ {:,.2f}"
+    if col_custo: format_dict[col_custo] = "R$ {:,.2f}"
+    if col_qtd: format_dict[col_qtd] = "{:,.0f}" # Quantidade sem decimais
+
+    # Exibe o dataframe com o estilo aplicado
+    st.dataframe(
+        df_filtrado.style.format(format_dict), 
+        use_container_width=True, 
+        height=500
+    )
 
 
     
