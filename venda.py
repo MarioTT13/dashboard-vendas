@@ -28,7 +28,7 @@ file = st.sidebar.file_uploader("📂 Atualizar Base", type=["xlsx", "csv", "xln
 df = load_data(file)
 
 if df is not None:
-    # Identificação de colunas (Seu código original robusto)
+    # Identificação de colunas
     cols = df.columns.tolist()
     col_valor = next((c for c in cols if any(kw in c.lower() for kw in ['valor', 'venda', 'total'])), None)
     col_custo = next((c for c in cols if any(kw in c.lower() for kw in ['custo'])), None)
@@ -51,32 +51,27 @@ if df is not None:
         if len(periodo) == 2:
             df_filtrado = df_filtrado[(df_filtrado[col_data].dt.date >= periodo[0]) & (df_filtrado[col_data].dt.date <= periodo[1])]
 
-   # --- CÁLCULOS DAS MÉTRICAS (CORRIGIDO) ---
-# Criamos o Faturamento Total por linha primeiro (Preço x Qtd)
-if col_qtd:
-    df_filtrado['Faturamento_Real'] = df_filtrado[col_valor] * df_filtrado[col_qtd]
-else:
-    df_filtrado['Faturamento_Real'] = df_filtrado[col_valor]
+    # --- CÁLCULOS DAS MÉTRICAS (AGORA DENTRO DO IF DF IS NOT NONE) ---
+    if col_qtd:
+        df_filtrado['Faturamento_Real'] = df_filtrado[col_valor] * df_filtrado[col_qtd]
+    else:
+        df_filtrado['Faturamento_Real'] = df_filtrado[col_valor]
 
-# Agora usamos o Faturamento_Real para todas as contas
-faturamento = df_filtrado['Faturamento_Real'].sum()
+    faturamento = df_filtrado['Faturamento_Real'].sum()
 
-# Cálculo do Lucro (Usando o faturamento real)
-if col_custo:
-    # Se tiver custo, lucro é (Preço Total - Custo Total)
-    # Importante: Verifique se o seu custo também precisa ser multiplicado pela Qtd!
-    total_custo = (df_filtrado[col_custo] * df_filtrado[col_qtd]).sum() if col_qtd else df_filtrado[col_custo].sum()
-    lucro = faturamento - total_custo
-else:
-    lucro = faturamento * 0.3
+    if col_custo:
+        # Ajuste para custo total (Custo unitário * Qtd)
+        total_custo = (df_filtrado[col_custo] * df_filtrado[col_qtd]).sum() if col_qtd else df_filtrado[col_custo].sum()
+        lucro = faturamento - total_custo
+    else:
+        lucro = faturamento * 0.3
 
     margem = (lucro / faturamento * 100) if faturamento > 0 else 0
-    # Cálculo do Ticket Médio
     qtd_total = df_filtrado[col_qtd].sum() if col_qtd else len(df_filtrado)
     ticket_medio = faturamento / qtd_total if qtd_total > 0 else 0
     
-    # --- EXIBIÇÃO DAS MÉTRICAS (Fora de qualquer 'if' de erro) ---
-    st.markdown("---") # Isso ajuda a ver se o código chegou aqui
+    # --- EXIBIÇÃO DAS MÉTRICAS ---
+    st.markdown("---")
     m1, m2, m3, m4 = st.columns(4)
 
     m1.metric("💰 Faturamento", f"R$ {faturamento:,.2f}")
@@ -84,20 +79,19 @@ else:
     m3.metric("🎯 Margem", f"{margem:.1f}%")
     m4.metric("🎫 Ticket Médio", f"R$ {ticket_medio:,.2f}")
     st.markdown("---")
- # --- GRÁFICO DE BARRAS (Versão Organizada) ---
+
+    # --- GRÁFICO DE BARRAS ---
     if col_data:
         st.subheader("📊 Evolução de Vendas por Período")
-        # Em vez de somar [col_valor], some ['Faturamento_Real']
         df_tempo = df_filtrado.groupby(col_data)['Faturamento_Real'].sum().reset_index()
 
         fig_barras = px.bar(
-            df_tempo, x=col_data, y=col_valor,
-            color=col_valor, 
+            df_tempo, x=col_data, y='Faturamento_Real', # Corrigido para Faturamento_Real
+            color='Faturamento_Real', 
             color_continuous_scale='Blues',
             text_auto='.2s'
         )
         
-        # --- FUNÇÃO QUE ARRUMA A BAGUNÇA DO MOUSE (HOVER) ---
         fig_barras.update_traces(
             hovertemplate="<b>Data:</b> %{x|%d/%m/%Y}<br><b>Faturamento:</b> R$ %{y:,.2f}<extra></extra>"
         )
@@ -112,13 +106,13 @@ else:
         st.plotly_chart(fig_barras, use_container_width=True)
     st.markdown("---")
     
-    # --- RANKINGS E MIX (Dividido em 2 colunas) ---
+    # --- RANKINGS E MIX ---
     c_left, c_right = st.columns([1, 1])
 
     with c_left:
         st.subheader("🎯 Mix de Categorias")
         fig_rosca = px.pie(
-            df_filtrado, values=col_valor, names=col_cat, hole=0.7,
+            df_filtrado, values='Faturamento_Real', names=col_cat, hole=0.7,
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
         fig_rosca.update_traces(
@@ -134,29 +128,20 @@ else:
         )
         st.plotly_chart(fig_rosca, use_container_width=True)
         
-
-        with c_right:
-         st.subheader("🏆 Performance de Itens")
-         tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Menos Vendidos"])
+    with c_right:
+        st.subheader("🏆 Performance de Itens")
+        tab1, tab2 = st.tabs(["🚀 Top Vendas", "⚠️ Menos Vendidos"])
         
-        # 1. Agrupamento e soma real
-        # Se col_qtd existir, somamos os valores reais da planilha
         df_perf = df_filtrado.groupby(col_prod).agg({
-            col_valor: 'sum',
-            col_qtd: 'sum' if col_qtd else 'count' # Se não tiver a coluna, ele conta as ocorrências
+            'Faturamento_Real': 'sum',
+            col_qtd: 'sum' if col_qtd else 'count'
         }).reset_index()
 
-        # 2. Renomeando para nomes amigáveis
         df_perf.columns = ['Produto', 'Faturamento Total', 'Qtd Saída']
-
-        # 3. Limpeza: Remove itens com valores zerados ou nomes estranhos
         df_perf = df_perf[df_perf['Faturamento Total'] > 0]
         
         with tab1:
-            # Ordena pelos que MAIS faturaram
             top_vendas = df_perf.nlargest(5, 'Faturamento Total')
-            
-            # Formatação "REAL": Coloca R$ e separa milhares
             st.dataframe(
                 top_vendas.style.format({
                     'Faturamento Total': 'R$ {:,.2f}',
@@ -167,9 +152,7 @@ else:
             )
             
         with tab2:
-            # Ordena pelos que MENOS faturaram
             bottom_vendas = df_perf.nsmallest(5, 'Faturamento Total')
-            
             st.dataframe(
                 bottom_vendas.style.format({
                     'Faturamento Total': 'R$ {:,.2f}',
@@ -178,16 +161,12 @@ else:
                 use_container_width=True,
                 hide_index=True
             )
-    # --- BASE DE DADOS AMPLIADA (FORA DAS COLUNAS) ---
-    # Note que o código abaixo não tem o 'with c_right' na frente dele
+
     st.markdown("---")
     st.subheader("📄 Base de Dados Completa")
-    
-    st.dataframe(
-        df_filtrado, 
-        use_container_width=True, 
-        height=600 # Aumentado para ficar bem grande
-    )
+    st.dataframe(df_filtrado, use_container_width=True, height=400)
+else:
+    st.info("Aguardando upload da base de dados...")
 
 
     
